@@ -47,8 +47,6 @@ def fill_pools():
         pools[agent_pool] = {"waittime": 0}
 
 
-
-
 def run():
     next_run = 0
     g_pool_wait_time = Gauge(
@@ -79,11 +77,12 @@ def run():
             if full_build["state"] != "queued":
                 continue
 
-            if (
-                full_build.get("waitReason", "[UNKNOWN]")
-                == "There are no compatible agents which can run this build"
-            ):
+            if full_build.get("waitReason", "[UNKNOWN]") in [
+                "Build dependencies have not been built yet",
+                "There are no compatible agents which can run this build",
+            ]:
                 continue
+            print(full_build.get("waitReason", "[UNKNOWN]"))
 
             if not full_build.get("startEstimate", False):
                 continue
@@ -114,4 +113,6 @@ def run():
 
         for pool_name, pool in pools.items():
             g_pool_wait_time.labels(pool_name=pool_name).set(pool["waittime"])
+
+
 
