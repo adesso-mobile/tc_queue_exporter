@@ -82,8 +82,6 @@ def run():
                 "There are no compatible agents which can run this build",
             ]:
                 continue
-            print(full_build.get("waitReason", "[UNKNOWN]"))
-
             if not full_build.get("startEstimate", False):
                 continue
             if not full_build.get("triggered", {}).get("date", False):
@@ -98,7 +96,6 @@ def run():
             build_waittime_rel = (
                 build_estimate_start.timestamp() - build_triggered.timestamp()
             )
-            build_waittime_rel /= 1000
             agents_response = requests.get(
                 "{}{}".format(TC_BASE_URL, full_build["compatibleAgents"]["href"]),
                 auth=auth,
@@ -113,6 +110,3 @@ def run():
 
         for pool_name, pool in pools.items():
             g_pool_wait_time.labels(pool_name=pool_name).set(pool["waittime"])
-
-
-
