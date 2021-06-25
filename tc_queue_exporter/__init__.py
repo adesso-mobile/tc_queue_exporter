@@ -80,6 +80,7 @@ def run():
             if full_build.get("waitReason", "[UNKNOWN]") in [
                 "Build dependencies have not been built yet",
                 "There are no compatible agents which can run this build",
+                "The maximum number of running builds for this configuration is reached",
             ]:
                 continue
             if not full_build.get("startEstimate", False):
