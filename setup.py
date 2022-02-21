@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="tc_queue_exporter",  # Replace with your own username
-    version="0.1.1",
+    version="0.1.2",
     author="adesso mobile solutions GmbH",
     author_email="it-operations@adesso-mobile.de",
     description="Export teamcity queue data",

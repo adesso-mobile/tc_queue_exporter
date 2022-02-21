@@ -63,7 +63,7 @@ def fill_pools():
 def run():
     if TC_BEARER is None and auth is None:
         print("No Login or Bearer defined")
-    exit(1)
+        exit(1)
 
 
     next_run = 0
