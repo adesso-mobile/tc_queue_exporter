@@ -10,12 +10,25 @@ from datetime import datetime
 
 TC_REST_BASE_URL = os.environ["TC_REST_BASE_URL"]
 TC_BASE_URL = os.environ["TC_BASE_URL"]
-auth = HTTPBasicAuth(os.environ["TC_USER"], os.environ["TC_PW"])
+
+
+TC_BEARER = os.environ.get('TC_BEARERTOKEN', None)
+
+if os.environ.get("TC_USER") is not None:
+    auth = HTTPBasicAuth(os.environ["TC_USER"], os.environ["TC_PW"])
+else:
+    auth = None
+
 PORT = int(os.getenv("TC_EXPORTER_PORT", 9305))
 
 pools = {}
 
 agents = {}
+
+
+headers={"Accept": "application/json"}
+if TC_BEARER is not None:
+    headers["authorization"] = "Bearer " + TC_BEARER
 
 
 def get_pool_from_agent(agent):
@@ -24,7 +37,7 @@ def get_pool_from_agent(agent):
         agents_response = requests.get(
             "{}{}".format(TC_BASE_URL, agent["href"]),
             auth=auth,
-            headers={"Accept": "application/json"},
+            headers=headers,
         )
         agents[agent_id] = agents_response.json()
     return str(agents[agent_id]["pool"]["name"])
@@ -34,13 +47,13 @@ def fill_pools():
     response = requests.get(
         "{}/agents".format(TC_REST_BASE_URL),
         auth=auth,
-        headers={"Accept": "application/json"},
+        headers=headers,
     )
     for agent in response.json()["agent"]:
         agentdetails_response = requests.get(
             "{}/agents/id:{}".format(TC_REST_BASE_URL, agent["id"]),
             auth=auth,
-            headers={"Accept": "application/json"},
+            headers=headers,
         )
         agentdetails = agentdetails_response.json()
         agent_pool = str(agentdetails["pool"]["name"])
@@ -48,6 +61,11 @@ def fill_pools():
 
 
 def run():
+    if TC_BEARER is None and auth is None:
+        print("No Login or Bearer defined")
+    exit(1)
+
+
     next_run = 0
     g_pool_wait_time = Gauge(
         "teamcity_pool_wait_time",
@@ -64,14 +82,14 @@ def run():
         queue_response = requests.get(
             "{}/buildQueue".format(TC_REST_BASE_URL),
             auth=auth,
-            headers={"Accept": "application/json"},
+            headers=headers,
         )
         queue = queue_response.json()
         for build in queue["build"]:
             build_response = requests.get(
                 "{}/builds/id:{}".format(TC_REST_BASE_URL, build["id"]),
                 auth=auth,
-                headers={"Accept": "application/json"},
+                headers=headers,
             )
             full_build = build_response.json()
             if full_build["state"] != "queued":
@@ -99,7 +117,7 @@ def run():
             agents_response = requests.get(
                 "{}{}".format(TC_BASE_URL, full_build["compatibleAgents"]["href"]),
                 auth=auth,
-                headers={"Accept": "application/json"},
+                headers=headers,
             )
             compatible_agents = agents_response.json()
             for agent in compatible_agents["agent"]:
